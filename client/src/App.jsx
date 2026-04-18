@@ -21,9 +21,6 @@ function App() {
       const fetchUser = async () => {
         const { data } = await axios.get(`${API}/api/users/info`, {
           withCredentials: true,
-          headers: {
-            "Cache-Control": "no-cache",
-          },
         });
         setUser(data);
       };

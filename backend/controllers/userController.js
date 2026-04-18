@@ -1,7 +1,7 @@
 import User from "../models/UserSchema.js";
 import bcrypt from "bcryptjs";
 import Task from "../models/TaskSchema.js";
-
+import mongoose from 'mongoose'
 
 /**
  * @desc Get all users
@@ -11,9 +11,7 @@ export const getUsers = async (req, res) => {
   try {
     // Fetch users (exclude password)
     const users = await User.find({ role: "user" }).select("-password");
-
     res.status(200).json(users);
-
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -22,6 +20,11 @@ export const getUsers = async (req, res) => {
   }
 };
 
+
+/**
+ * @desc Get logged-in user info
+ * @route GET /api/users/info
+ */
 export const getUserInfo = async (req, res) => {
   try {
     if (!req.user) {
@@ -30,12 +33,21 @@ export const getUserInfo = async (req, res) => {
       });
     }
 
-    // ✅ Send only safe user data
-    res.status(200).json({
-      name: req.user.name,
-      email: req.user.email,
-      role: req.user.role,
-    });
+    const id = req.user.id;
+
+    // Fetch user from DB
+    const user = await User.findById(id).select(
+      "name email role isActive"
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    // Send safe data
+    res.status(200).json(user);
 
   } catch (error) {
     console.error(error);
@@ -44,7 +56,6 @@ export const getUserInfo = async (req, res) => {
     });
   }
 };
-
 
 /**
  * @desc Update user
@@ -82,7 +93,6 @@ export const updateUser = async (req, res) => {
     delete userResponse.password;
 
     res.status(200).json(userResponse);
-
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -90,7 +100,6 @@ export const updateUser = async (req, res) => {
     });
   }
 };
-
 
 /**
  * @desc Create new user
@@ -132,7 +141,6 @@ export const createUser = async (req, res) => {
     delete userResponse.password;
 
     res.status(201).json(userResponse);
-
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -142,35 +150,209 @@ export const createUser = async (req, res) => {
 };
 
 
-
 /**
- * @desc Get user with task stats
+ * @desc Get user with full stats
  * @route GET /api/users/:id/stats
  */
 export const getUserStats = async (req, res) => {
   try {
     const { id } = req.params;
 
+    // 1. Validate user
     const user = await User.findById(id).select("name email role");
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const total = await Task.countDocuments({ user: id });
-    const completed = await Task.countDocuments({ user: id, status: "completed" });
-    const pending = await Task.countDocuments({ user: id, status: "pending" });
+    const userObjectId = new mongoose.Types.ObjectId(id);
 
+    // ---------- COMMON FUNCTION ----------
+    const calculateScore = (data) => {
+      const completionRate =
+        (data.completedTasks || 0) / (data.totalTasks || 1);
+
+      const efficiency =
+        (data.totalEstimatedTime || 1) /
+        (data.totalActualTime || 1);
+
+      return completionRate * 70 + efficiency * 30;
+    };
+
+    // ---------- OVERALL ----------
+    const overallAgg = await Task.aggregate([
+      { $match: { assignedTo: userObjectId } },
+      {
+        $group: {
+          _id: null,
+          totalTasks: { $sum: 1 },
+          completedTasks: {
+            $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] },
+          },
+          pending: {
+            $sum: { $cond: [{ $eq: ["$status", "pending"] }, 1, 0] },
+          },
+          inProgress: {
+            $sum: { $cond: [{ $eq: ["$status", "in-progress"] }, 1, 0] },
+          },
+          totalActualTime: { $sum: "$actualTime" },
+          totalEstimatedTime: { $sum: "$estimatedTime" },
+        },
+      },
+    ]);
+
+    const overall = overallAgg[0] || {
+      totalTasks: 0,
+      completedTasks: 0,
+      pending: 0,
+      inProgress: 0,
+      totalActualTime: 0,
+      totalEstimatedTime: 0,
+    };
+
+    const overallScore = calculateScore(overall);
+
+    // ---------- DAILY ----------
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const dailyAgg = await Task.aggregate([
+      {
+        $match: {
+          assignedTo: userObjectId,
+          createdAt: { $gte: today },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalTasks: { $sum: 1 },
+          completedTasks: {
+            $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] },
+          },
+          totalActualTime: { $sum: "$actualTime" },
+          totalEstimatedTime: { $sum: "$estimatedTime" },
+        },
+      },
+    ]);
+
+    const daily = dailyAgg[0] || {};
+    const dailyScore = calculateScore(daily);
+
+    // ---------- WEEKLY ----------
+    const last7Days = new Date();
+    last7Days.setDate(last7Days.getDate() - 7);
+
+    const weeklyAgg = await Task.aggregate([
+      {
+        $match: {
+          assignedTo: userObjectId,
+          createdAt: { $gte: last7Days },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalTasks: { $sum: 1 },
+          completedTasks: {
+            $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] },
+          },
+          totalActualTime: { $sum: "$actualTime" },
+          totalEstimatedTime: { $sum: "$estimatedTime" },
+        },
+      },
+    ]);
+
+    const weekly = weeklyAgg[0] || {};
+    const weeklyScore = calculateScore(weekly);
+
+    // ---------- MONTHLY ----------
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const monthlyAgg = await Task.aggregate([
+      {
+        $match: {
+          assignedTo: userObjectId,
+          createdAt: { $gte: startOfMonth },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalTasks: { $sum: 1 },
+          completedTasks: {
+            $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] },
+          },
+          totalActualTime: { $sum: "$actualTime" },
+          totalEstimatedTime: { $sum: "$estimatedTime" },
+        },
+      },
+    ]);
+
+    const monthly = monthlyAgg[0] || {};
+    const monthlyScore = calculateScore(monthly);
+
+    // ---------- FINAL PRODUCTIVITY ----------
+    const productivityScore =
+      overallScore * 0.4 +
+      monthlyScore * 0.3 +
+      weeklyScore * 0.2 +
+      dailyScore * 0.1;
+
+    // ---------- FINAL RESPONSE ----------
     res.status(200).json({
       user,
       stats: {
-        total,
-        completed,
-        pending,
+        total: overall.totalTasks,
+        pending: overall.pending,
+        inProgress: overall.inProgress,
+        completed: overall.completedTasks,
       },
+      productivity: {
+        overall: Math.round(productivityScore),
+        monthly: Math.round(monthlyScore),
+        weekly: Math.round(weeklyScore),
+        daily: Math.round(dailyScore),
+      },
+
+      daily,
+      weekly,
+      monthly,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+
+export const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const user = await User.findByIdAndUpdate(
+      id,
+      { isActive: false },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    res.status(200).json({
+      message: "User deactivated successfully",
+      user,
     });
 
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({
+      message: "Server error",
+    });
   }
 };

@@ -14,22 +14,22 @@ const AdminUsers = () => {
 
   const API = import.meta.env.VITE_API_URL;
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      setLoading(true);
-      try {
-        const { data } = await axios.get(`${API}/api/users`, {
-          withCredentials: true,
-        });
-        setUsers(data);
-      } catch (error) {
-        console.error(error);
-        setUsers([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const { data } = await axios.get(`${API}/api/users`, {
+        withCredentials: true,
+      });
+      setUsers(data);
+    } catch (error) {
+      console.error(error);
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchUsers();
   }, []);
 
@@ -52,7 +52,7 @@ const AdminUsers = () => {
         withCredentials: true,
       });
 
-      setUsers((prev) => prev.filter((u) => u._id !== id));
+      await fetchUsers();
     } catch (error) {
       console.error(error);
       alert("Failed to delete user");
@@ -66,7 +66,6 @@ const AdminUsers = () => {
 
       {/* Main Content */}
       <div className="ml-64 w-full p-6 bg-gray-100 min-h-screen">
-        
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">All Users</h1>
@@ -78,7 +77,7 @@ const AdminUsers = () => {
             }}
             className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800"
           >
-            + Add User
+            Add User
           </button>
         </div>
 
@@ -96,7 +95,6 @@ const AdminUsers = () => {
                   <th className="p-3 text-sm text-right">Actions</th>
                 </tr>
               </thead>
-
               <tbody>
                 {users.length === 0 ? (
                   <tr>
@@ -105,61 +103,78 @@ const AdminUsers = () => {
                     </td>
                   </tr>
                 ) : (
-                  users.map((user) => (
-                    <tr key={user._id} className="border-t">
-                      <td className="p-3">{user.name}</td>
-                      <td className="p-3">{user.email}</td>
-                      <td className="p-3 capitalize">{user.role}</td>
+                  users.map((user) => {
+                    const isInactive = user.isActive === false;
 
-                      <td className="p-3 relative text-right">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenMenuId(
-                              openMenuId === user._id ? null : user._id
-                            );
-                          }}
-                          className="px-2 py-1 rounded hover:bg-gray-100"
-                        >
-                          ⋮
-                        </button>
+                    return (
+                      <tr
+                        key={user._id}
+                        className={`border-t ${isInactive ? "opacity-50 blur-[1px]" : ""}`}
+                      >
+                        <td className="p-3">{user.name}</td>
+                        <td className="p-3">{user.email}</td>
+                        <td className="p-3 capitalize">{user.role}</td>
 
-                        {openMenuId === user._id && (
-                          <div className="absolute right-0 mt-2 w-36 bg-white border rounded-lg shadow-md z-50">
-                            <button
-                              onClick={() => {
-setSelectedUser(user);
-setIsViewModalOpen(true);
-                              }}
-                              className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                            >
-                              👁 View
-                            </button>
+                        <td className="p-3 relative text-right">
+                          <button
+                            disabled={isInactive}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (isInactive) return; // extra safety
 
-                            <button
-                              onClick={() => {
-                                handleEditUser(user);
-                                setOpenMenuId(null);
-                              }}
-                              className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                            >
-                              ✏️ Edit
-                            </button>
+                              setOpenMenuId(
+                                openMenuId === user._id ? null : user._id,
+                              );
+                            }}
+                            className={`px-2 py-1 rounded 
+            ${
+              isInactive
+                ? "cursor-not-allowed text-gray-400"
+                : "hover:bg-gray-100"
+            }
+          `}
+                          >
+                            ⋮
+                          </button>
 
-                            <button
-                              onClick={() => {
-                                handleDeleteUser(user._id);
-                                setOpenMenuId(null);
-                              }}
-                              className="block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100"
-                            >
-                              🗑 Delete
-                            </button>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  ))
+                          {!isInactive && openMenuId === user._id && (
+                            <div className="absolute right-0 mt-2 w-36 bg-white border rounded-lg shadow-md z-50">
+                              <button
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setIsViewModalOpen(true);
+                                  setOpenMenuId(null);
+                                }}
+                                className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                              >
+                                View
+                              </button>
+
+                              <button
+                                onClick={() => {
+                                  handleEditUser(user);
+                                  setOpenMenuId(null);
+                                }}
+                                className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                              >
+                                Edit
+                              </button>
+
+                              <button
+                                onClick={() => {
+                                  handleDeleteUser(user._id);
+                                  setOpenMenuId(null);
+                                }}
+                                className="block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -171,26 +186,18 @@ setIsViewModalOpen(true);
           <UserModal
             user={selectedUser}
             onClose={() => setIsModalOpen(false)}
-            onSuccess={(newUser, isEdit) => {
-              if (isEdit) {
-                setUsers((prev) =>
-                  prev.map((u) => (u._id === newUser._id ? newUser : u))
-                );
-              } else {
-                setUsers((prev) => [newUser, ...prev]);
-              }
+            onSuccess={async () => {
+              await fetchUsers();
             }}
           />
         )}
 
-
-{isViewModalOpen && (
-  <ViewUserModal
-    user={selectedUser}
-    onClose={() => setIsViewModalOpen(false)}
-  />
-)}
-
+        {isViewModalOpen && (
+          <ViewUserModal
+            user={selectedUser}
+            onClose={() => setIsViewModalOpen(false)}
+          />
+        )}
       </div>
     </div>
   );

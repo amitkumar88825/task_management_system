@@ -20,7 +20,7 @@ dotenv.config();
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 min
-  max: 100, // limit each IP
+  max: 100000, // limit each IP
   message: "Too many requests, try again later",
 });
 
@@ -84,5 +84,5 @@ const PORT = process.env.PORT || 5000;
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.info(`Server running on port ${PORT}`);
 });

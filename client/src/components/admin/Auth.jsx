@@ -7,7 +7,6 @@ import { IoEye, IoEyeOff } from "react-icons/io5";
 const AdminAuth = () => {
   const navigate = useNavigate();
   const API = import.meta.env.VITE_API_URL;
-  console.log(10, 'Api -> ', API);
 
   const [formData, setFormData] = useState({
     email: "",

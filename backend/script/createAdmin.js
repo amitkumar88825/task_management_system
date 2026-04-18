@@ -9,7 +9,7 @@ const createAdmin = async () => {
   try {
     // Connect DB
     await mongoose.connect(process.env.MONGO_URI);
-    console.log("MongoDB Connected");
+    console.info("MongoDB Connected");
 
     const email = "admin@gmail.com";
     const password = "Admin@123";
@@ -18,7 +18,7 @@ const createAdmin = async () => {
     const existingAdmin = await User.findOne({ email });
 
     if (existingAdmin) {
-      console.log("Admin already exists");
+      console.info("Admin already exists");
       process.exit();
     }
 

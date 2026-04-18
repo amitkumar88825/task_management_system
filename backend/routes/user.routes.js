@@ -5,6 +5,7 @@ import {
   updateUser,
   createUser,
   getUserStats,
+  deleteUser,
 } from "../controllers/userController.js";
 
 import { validateAdmin } from "../middleware/validateAdmin.js";
@@ -22,7 +23,7 @@ router.post("/", validateAdmin, createUser);
  * @desc Get logged-in user info
  * @route GET /api/users/info
  */
-router.get("/info", validateUser, getUserInfo);
+router.get("/info", getUserInfo);
 
 /**
  * @desc Get all users (Admin only)
@@ -41,5 +42,7 @@ router.put("/:id", validateAdmin, updateUser);
  * @route GET /api/users/:id/stats
  */
 router.get("/:id/stats", validateAdmin, getUserStats);
+
+router.delete("/:id", validateAdmin, deleteUser);
 
 export default router;

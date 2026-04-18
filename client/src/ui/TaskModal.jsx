@@ -3,7 +3,7 @@ import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 
 const TaskModal = ({ isOpen, onClose, onTaskCreated, initialData }) => {
-  const { user } = useAuth();
+  const { user } = useAuth();  
 
   const [formData, setFormData] = useState(() => ({
     title: initialData?.title || "",
@@ -17,6 +17,7 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, initialData }) => {
   const [fetchingUsers, setFetchingUsers] = useState(false);
   const API = import.meta.env.VITE_API_URL;
 
+
   // ✅ Fetch users only when modal opens
   useEffect(() => {
     if (!isOpen) return;
@@ -29,7 +30,9 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, initialData }) => {
           withCredentials: true,
         });
 
-        setUsers(data);
+        const activeUsers = data.filter((u) => u.isActive !== false);
+
+        setUsers(activeUsers);
       } catch (error) {
         console.error(error);
       } finally {
@@ -41,6 +44,8 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, initialData }) => {
   }, [isOpen]);
 
   if (!isOpen) return null;
+
+    if (!user) return null;
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -67,7 +72,7 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, initialData }) => {
       let response;
 
       if (initialData) {
-        if (user.role === "user") {
+        if (user?.role === "user") {
           response = await axios.put(
             `${API}/api/tasks/update-status/${initialData._id}`,
             formData,
@@ -82,7 +87,7 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, initialData }) => {
         }
       } else {
         response = await axios.post(
-          "${API}/api/tasks",
+          `${API}/api/tasks`,
           formData,
           { withCredentials: true },
         );
@@ -193,12 +198,12 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, initialData }) => {
 
           {/* Status */}
           <div>
-            <label className="text-sm font-medium">Status {formData.priority} {user.role}</label>
+            <label className="text-sm font-medium">Status</label>
             <select
               name="status"
               value={formData.status}
               disable={
-                formData.priority === "completed" && user.role === "user"
+                formData?.priority === "completed" && user?.role === "user"
               }
               onChange={handleChange}
               className="mt-1 w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"

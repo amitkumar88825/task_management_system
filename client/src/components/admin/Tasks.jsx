@@ -4,7 +4,7 @@ import AdminSidebar from "../../ui/AdminSidebar";
 import TaskModal from "../../ui/TaskModal";
 
 const AdminTasks = () => {
-      const API = import.meta.env.VITE_API_URL;
+  const API = import.meta.env.VITE_API_URL;
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openModal, setOpenModal] = useState(false);
@@ -114,7 +114,7 @@ const AdminTasks = () => {
             onClick={() => setOpenModal(true)}
             className="bg-black text-white px-4 py-2 rounded-lg"
           >
-            + Create Task
+            Create Task
           </button>
         </div>
 
@@ -188,7 +188,7 @@ const AdminTasks = () => {
                             }}
                             className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
                           >
-                            👁 View
+                            View
                           </button>
 
                           <button
@@ -198,7 +198,7 @@ const AdminTasks = () => {
                             }}
                             className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
                           >
-                            ✏️ Edit
+                            Edit
                           </button>
 
                           <button
@@ -208,7 +208,7 @@ const AdminTasks = () => {
                             }}
                             className="block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100"
                           >
-                            🗑 Delete
+                            Delete
                           </button>
                         </div>
                       )}

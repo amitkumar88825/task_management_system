@@ -17,10 +17,12 @@ const UserDashboard = () => {
   });
 
   // 🔥 NEW STATES
-  const [productivity, setProductivity] = useState(0);
-  const [daily, setDaily] = useState(0);
-  const [weekly, setWeekly] = useState(0);
-  const [monthly, setMonthly] = useState(0);
+  const [productivity, setProductivity] = useState({
+    overall: 0,
+    weekly: 0,
+    monthly: 0,
+    daily: 0
+  });
 
   const [openMenuId, setOpenMenuId] = useState(null);
   const [openModal, setOpenModal] = useState(false);
@@ -54,58 +56,23 @@ const UserDashboard = () => {
           { withCredentials: true }
         );
 
-        // ✅ Stats
-        const { data: statsData } = await axios.get(
-          `${API}/api/tasks/user-tasks-report`,
-          { withCredentials: true }
-        );
-
         // ✅ Productivity
         const { data: productivityData } = await axios.get(
           `${API}/api/tasks/productivity`,
           { withCredentials: true }
         );
 
-        // ✅ Daily
-        const { data: dailyData } = await axios.get(
-          `${API}/api/tasks/daily-stats`,
-          { withCredentials: true }
-        );
-
-        // ✅ Weekly
-        const { data: weeklyData } = await axios.get(
-          `${API}/api/tasks/weekly-stats`,
-          { withCredentials: true }
-        );
-
-        // ✅ Monthly (optional backend)
-        let monthlyValue = 0;
-        try {
-          const { data: monthlyData } = await axios.get(
-            `${API}/api/tasks/monthly-stats`,
-            { withCredentials: true }
-          );
-          monthlyValue = monthlyData?.total || 0;
-        } catch(error) {
-          console.error(error);
-        }
-
-        // 🔥 SET STATE
+        // SET STATE
         setTasks(data);
-        setStats(statsData);
-
-        setProductivity(productivityData?.productivityScore || 0);
-        setDaily(dailyData?.completed || 0);
-        setWeekly(weeklyData?.length || 0);
-        setMonthly(monthlyValue);
-
+        setStats(productivityData.stats);
+        setProductivity(productivityData.productivity);
       } catch (error) {
         console.error(error);
       }
     };
 
     fetchAll();
-  }, [API]);
+  }, []);
 
   const getStatusStyle = (status) => {
     switch (status) {
@@ -160,10 +127,10 @@ const UserDashboard = () => {
 
       {/* Productivity */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card title="Productivity Score" value={productivity} />
-        <Card title="Daily Completed" value={daily} color="yellow" />
-        <Card title="Weekly Activity" value={weekly} color="blue" />
-        <Card title="Monthly Activity" value={monthly} color="green" />
+        <Card title="Productivity Score" value={productivity.overall} />
+        <Card title="Daily Completed" value={productivity.daily} color="yellow" />
+        <Card title="Weekly Activity" value={productivity.weekly} color="blue" />
+        <Card title="Monthly Activity" value={productivity.monthly} color="green" />
       </div>
 
       {/* Task Table */}
