@@ -12,10 +12,10 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, initialData }) => {
     priority: initialData?.priority || "medium",
     assignedTo: initialData?.assignedTo || "",
   }));
-
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetchingUsers, setFetchingUsers] = useState(false);
+  const API = import.meta.env.VITE_API_URL;
 
   // ✅ Fetch users only when modal opens
   useEffect(() => {
@@ -25,7 +25,7 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, initialData }) => {
       try {
         setFetchingUsers(true);
 
-        const { data } = await axios.get("http://localhost:5000/api/users", {
+        const { data } = await axios.get(`${API}/api/users`, {
           withCredentials: true,
         });
 
@@ -69,20 +69,20 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, initialData }) => {
       if (initialData) {
         if (user.role === "user") {
           response = await axios.put(
-            `http://localhost:5000/api/tasks/update-status/${initialData._id}`,
+            `${API}/api/tasks/update-status/${initialData._id}`,
             formData,
             { withCredentials: true },
           );
         } else {
           response = await axios.put(
-            `http://localhost:5000/api/tasks/${initialData._id}`,
+            `${API}/api/tasks/${initialData._id}`,
             formData,
             { withCredentials: true },
           );
         }
       } else {
         response = await axios.post(
-          "http://localhost:5000/api/tasks",
+          "${API}/api/tasks",
           formData,
           { withCredentials: true },
         );

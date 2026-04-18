@@ -14,7 +14,7 @@ const UserSingup = () => {
 
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
+  const API = import.meta.env.VITE_API_URL;
   const { name, email, password } = formData;
 
   const handleChange = (e) => {
@@ -30,7 +30,7 @@ const UserSingup = () => {
 
     try {
       const { data } = await axios.post(
-        "http://localhost:5000/api/auth/register",
+        `${API}/api/auth/register`,
         { name, email, password },
         {
           withCredentials: true

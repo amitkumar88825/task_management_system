@@ -16,6 +16,8 @@ const UserLogin = () => {
 
   const { email, password } = formData;
 
+  const API = import.meta.env.VITE_API_URL;
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -29,7 +31,7 @@ const UserLogin = () => {
 
     try {
       await axios.post(
-        "http://localhost:5000/api/auth/login",
+        `${API}/api/auth/login`,
         { email, password },
         {
           withCredentials: true

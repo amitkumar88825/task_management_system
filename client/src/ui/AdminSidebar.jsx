@@ -4,7 +4,7 @@ import axios from "axios";
 const AdminSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-
+  const API = import.meta.env.VITE_API_URL;
   const menu = [
     { name: "Dashboard", path: "/admin/dashboard" },
     { name: "Users", path: "/admin/users" },
@@ -16,7 +16,7 @@ const handleLogout = async () => {
   try {
     // Call backend logout API
     await axios.post(
-      "http://localhost:5000/api/auth/logout",
+      `${API}/api/auth/logout`,
       {
         withCredentials: true
       }
