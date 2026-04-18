@@ -28,7 +28,7 @@ const LandingPage = () => {
       {/* Hero Section */}
       <section className="text-center py-20 px-6">
         <h1 className="text-4xl md:text-5xl font-bold mb-4">
-          Manage Tasks Smarter
+          Manage Tasks Smarter & Easier
         </h1>
         <p className="text-gray-600 max-w-2xl mx-auto mb-6">
           Organize, track, and complete your tasks efficiently with our powerful
