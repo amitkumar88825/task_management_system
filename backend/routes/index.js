@@ -11,7 +11,7 @@ const router = express.Router();
 // Auth routes
 router.use("/auth", authRoutes);
 
-
+// protected Routes
 router.use("/tasks", protect, taskRoutes);
 router.use("/users", protect, userRoutes);
 

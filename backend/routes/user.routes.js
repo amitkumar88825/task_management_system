@@ -45,7 +45,7 @@ router.get("/list", validateAdmin, getUsersList);
 router.put("/:id", validateAdmin, updateUser);
 
 /**
- * ✅ NEW: Get user stats (for View Modal)
+ * NEW: Get user stats (for View Modal)
  * @route GET /api/users/:id/stats
  */
 router.get("/:id/stats", validateAdmin, getUserStats);

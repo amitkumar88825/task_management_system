@@ -1,7 +1,7 @@
 import User from "../models/UserSchema.js";
 import bcrypt from "bcryptjs";
 import Task from "../models/TaskSchema.js";
-import mongoose from 'mongoose'
+import mongoose from "mongoose";
 
 /**
  * @desc Get all users (paginated)
@@ -39,7 +39,6 @@ export const getUsers = async (req, res) => {
       total,
       hasMore: page * limit < total,
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -47,7 +46,6 @@ export const getUsers = async (req, res) => {
     });
   }
 };
-
 
 /**
  * @desc Get all active users (no pagination)
@@ -63,7 +61,6 @@ export const getUsersList = async (req, res) => {
       .sort({ createdAt: -1 });
 
     res.status(200).json(users);
-
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -87,9 +84,7 @@ export const getUserInfo = async (req, res) => {
     const id = req.user.id;
 
     // Fetch user from DB
-    const user = await User.findById(id).select(
-      "name email role isActive"
-    );
+    const user = await User.findById(id).select("name email role isActive");
 
     if (!user) {
       return res.status(404).json({
@@ -99,7 +94,6 @@ export const getUserInfo = async (req, res) => {
 
     // Send safe data
     res.status(200).json(user);
-
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -200,7 +194,6 @@ export const createUser = async (req, res) => {
   }
 };
 
-
 /**
  * @desc Get user with full stats
  * @route GET /api/users/:id/stats
@@ -217,26 +210,23 @@ export const getUserStats = async (req, res) => {
 
     const userObjectId = new mongoose.Types.ObjectId(id);
 
-const calculateScore = (data) => {
+    const calculateScore = (data) => {
+      // ✅ NO DATA → NO SCORE
+      if (!data.totalTasks || data.totalTasks === 0) {
+        return 0;
+      }
 
-  // ✅ NO DATA → NO SCORE
-  if (!data.totalTasks || data.totalTasks === 0) {
-    return 0;
-  }
+      const completionRate = (data.completedTasks || 0) / data.totalTasks;
 
-  const completionRate =
-    (data.completedTasks || 0) / data.totalTasks;
+      const efficiency =
+        data.totalActualTime > 0
+          ? (data.totalEstimatedTime || 0) / data.totalActualTime
+          : 0;
 
-  const efficiency =
-    data.totalActualTime > 0
-      ? (data.totalEstimatedTime || 0) / data.totalActualTime
-      : 0;
+      const productivity = completionRate * 70 + efficiency * 30;
 
-  const productivity =
-    completionRate * 70 + efficiency * 30;
-
-  return productivity;
-};
+      return productivity;
+    };
 
     // ---------- OVERALL ----------
     const overallAgg = await Task.aggregate([
@@ -386,8 +376,6 @@ const calculateScore = (data) => {
   }
 };
 
-
-
 export const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -395,7 +383,7 @@ export const deleteUser = async (req, res) => {
     const user = await User.findByIdAndUpdate(
       id,
       { isActive: false },
-      { new: true }
+      { new: true },
     );
 
     if (!user) {
@@ -408,7 +396,6 @@ export const deleteUser = async (req, res) => {
       message: "User deactivated successfully",
       user,
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({
