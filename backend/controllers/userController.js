@@ -4,14 +4,42 @@ import Task from "../models/TaskSchema.js";
 import mongoose from 'mongoose'
 
 /**
- * @desc Get all users
- * @route GET /api/users
+ * @desc Get all users (paginated)
+ * @route GET /api/users?page=1&limit=10
  */
 export const getUsers = async (req, res) => {
   try {
-    // Fetch users (exclude password)
-    const users = await User.find({ role: "user" }).select("-password");
-    res.status(200).json(users);
+    // Get query params
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+
+    const skip = (page - 1) * limit;
+
+    // Query (only active users if needed)
+    const query = {
+      role: "user",
+      // isActive: true, // 👉 uncomment if you want only active users
+    };
+
+    // Fetch users
+    const users = await User.find(query)
+      .select("-password")
+      .sort({ createdAt: -1 }) // latest first
+      .skip(skip)
+      .limit(limit);
+
+    // Total count
+    const total = await User.countDocuments(query);
+
+    // Response
+    res.status(200).json({
+      users,
+      page,
+      totalPages: Math.ceil(total / limit),
+      total,
+      hasMore: page * limit < total,
+    });
+
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -20,6 +48,29 @@ export const getUsers = async (req, res) => {
   }
 };
 
+
+/**
+ * @desc Get all active users (no pagination)
+ * @route GET /api/users/list
+ */
+export const getUsersList = async (req, res) => {
+  try {
+    const users = await User.find({
+      role: "user",
+      isActive: true,
+    })
+      .select("-password")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(users);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
 
 /**
  * @desc Get logged-in user info
@@ -166,17 +217,26 @@ export const getUserStats = async (req, res) => {
 
     const userObjectId = new mongoose.Types.ObjectId(id);
 
-    // ---------- COMMON FUNCTION ----------
-    const calculateScore = (data) => {
-      const completionRate =
-        (data.completedTasks || 0) / (data.totalTasks || 1);
+const calculateScore = (data) => {
 
-      const efficiency =
-        (data.totalEstimatedTime || 1) /
-        (data.totalActualTime || 1);
+  // ✅ NO DATA → NO SCORE
+  if (!data.totalTasks || data.totalTasks === 0) {
+    return 0;
+  }
 
-      return completionRate * 70 + efficiency * 30;
-    };
+  const completionRate =
+    (data.completedTasks || 0) / data.totalTasks;
+
+  const efficiency =
+    data.totalActualTime > 0
+      ? (data.totalEstimatedTime || 0) / data.totalActualTime
+      : 0;
+
+  const productivity =
+    completionRate * 70 + efficiency * 30;
+
+  return productivity;
+};
 
     // ---------- OVERALL ----------
     const overallAgg = await Task.aggregate([

@@ -28,7 +28,7 @@ const taskSchema = new mongoose.Schema(
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      //   required: true,
+      required: true,
     },
 
     createdAt: {
@@ -36,11 +36,13 @@ const taskSchema = new mongoose.Schema(
       default: Date.now,
     },
 
-    completedAt: Date,
+    estimatedTime: {
+      type: Number,
+    },
 
-    estimatedTime: Number,
-
-    actualTime: Number,
+    actualTime: {
+      type: Number,
+    },
 
     priority: {
       type: String,

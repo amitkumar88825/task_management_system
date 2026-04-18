@@ -21,7 +21,7 @@ const UserDashboard = () => {
     overall: 0,
     weekly: 0,
     monthly: 0,
-    daily: 0
+    daily: 0,
   });
 
   const [openMenuId, setOpenMenuId] = useState(null);
@@ -35,10 +35,11 @@ const UserDashboard = () => {
     setOpenModal(true);
   };
 
-  const handleTaskUpdated = (updatedTask) => {
+  const handleTaskUpdated = async (updatedTask) => {
     setTasks((prev) =>
-      prev.map((t) => (t._id === updatedTask._id ? updatedTask : t))
+      prev.map((t) => (t._id === updatedTask._id ? updatedTask : t)),
     );
+    await fetchAll();
   };
 
   useEffect(() => {
@@ -47,30 +48,26 @@ const UserDashboard = () => {
     return () => window.removeEventListener("click", closeMenu);
   }, []);
 
+  const fetchAll = async () => {
+    try {
+      const { data } = await axios.get(`${API}/api/tasks/user-tasks`, {
+        withCredentials: true,
+      });
+
+      const { data: productivityData } = await axios.get(
+        `${API}/api/tasks/productivity`,
+        { withCredentials: true },
+      );
+
+      setTasks(data);
+      setStats(productivityData.stats);
+      setProductivity(productivityData.productivity);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   useEffect(() => {
-    const fetchAll = async () => {
-      try {
-        // ✅ Tasks
-        const { data } = await axios.get(
-          `${API}/api/tasks/user-tasks`,
-          { withCredentials: true }
-        );
-
-        // ✅ Productivity
-        const { data: productivityData } = await axios.get(
-          `${API}/api/tasks/productivity`,
-          { withCredentials: true }
-        );
-
-        // SET STATE
-        setTasks(data);
-        setStats(productivityData.stats);
-        setProductivity(productivityData.productivity);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
     fetchAll();
   }, []);
 
@@ -89,9 +86,13 @@ const UserDashboard = () => {
 
   const handleLogout = async () => {
     try {
-      await axios.post(`${API}/api/auth/logout`, {}, {
-        withCredentials: true,
-      });
+      await axios.post(
+        `${API}/api/auth/logout`,
+        {},
+        {
+          withCredentials: true,
+        },
+      );
 
       navigate("/");
     } catch (error) {
@@ -128,9 +129,21 @@ const UserDashboard = () => {
       {/* Productivity */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <Card title="Productivity Score" value={productivity.overall} />
-        <Card title="Daily Completed" value={productivity.daily} color="yellow" />
-        <Card title="Weekly Activity" value={productivity.weekly} color="blue" />
-        <Card title="Monthly Activity" value={productivity.monthly} color="green" />
+        <Card
+          title="Daily Completed"
+          value={productivity.daily}
+          color="yellow"
+        />
+        <Card
+          title="Weekly Activity"
+          value={productivity.weekly}
+          color="blue"
+        />
+        <Card
+          title="Monthly Activity"
+          value={productivity.monthly}
+          color="green"
+        />
       </div>
 
       {/* Task Table */}
@@ -139,40 +152,63 @@ const UserDashboard = () => {
 
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b text-left">
-              <th>#</th>
-              <th>Title</th>
-              <th>Status</th>
-              <th>Action</th>
+            <tr className="border-b text-left bg-gray-50">
+              <th className="p-2">#</th>
+              <th className="p-2">Title</th>
+              <th className="p-2">Status</th>
+              <th className="p-2">Priority</th>
+              <th className="p-2">Estimated Time</th>
+              <th className="p-2">Actual Time</th>
+              <th className="p-2 text-right">Action</th>
             </tr>
           </thead>
 
           <tbody>
             {tasks.length === 0 ? (
               <tr>
-                <td colSpan="4" className="py-6 text-center text-gray-500">
+                <td colSpan="7" className="py-6 text-center text-gray-500">
                   No tasks found
                 </td>
               </tr>
             ) : (
               tasks.map((task, index) => (
                 <tr key={task._id} className="border-b hover:bg-gray-50">
-                  <td>{index + 1}</td>
-                  <td>{task.title}</td>
+                  <td className="p-2">{index + 1}</td>
 
-                  <td>
-                    <span className={`px-2 py-1 rounded text-xs ${getStatusStyle(task.status)}`}>
+                  <td className="p-2">{task.title}</td>
+
+                  {/* STATUS */}
+                  <td className="p-2">
+                    <span
+                      className={`px-2 py-1 rounded text-xs ${getStatusStyle(
+                        task.status,
+                      )}`}
+                    >
                       {task.status}
                     </span>
                   </td>
 
-                  <td className="relative">
+                  {/* PRIORITY */}
+                  <td className="p-2 capitalize">{task.priority}</td>
+
+                  {/* ESTIMATED */}
+                  <td className="p-2">{task.estimatedTime ?? 0} hrs</td>
+
+                  {/* ACTUAL */}
+                  <td className="p-2 font-medium">
+                    {task.actualTime ?? 0} hrs
+                  </td>
+
+                  {/* ACTION */}
+                  <td className="p-2 relative text-right">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setOpenMenuId(openMenuId === task._id ? null : task._id);
+                        setOpenMenuId(
+                          openMenuId === task._id ? null : task._id,
+                        );
                       }}
-                      className="px-2 py-1 hover:bg-gray-100"
+                      className="px-2 py-1 rounded hover:bg-gray-100"
                     >
                       ⋮
                     </button>

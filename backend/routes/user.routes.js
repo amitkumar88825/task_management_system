@@ -6,6 +6,7 @@ import {
   createUser,
   getUserStats,
   deleteUser,
+  getUsersList,
 } from "../controllers/userController.js";
 
 import { validateAdmin } from "../middleware/validateAdmin.js";
@@ -30,6 +31,12 @@ router.get("/info", getUserInfo);
  * @route GET /api/users
  */
 router.get("/", validateAdmin, getUsers);
+
+/**
+ * @desc Get all users (Admin only)
+ * @route GET /api/users/list
+ */
+router.get("/list", validateAdmin, getUsersList);
 
 /**
  * @desc Update user (Admin only)

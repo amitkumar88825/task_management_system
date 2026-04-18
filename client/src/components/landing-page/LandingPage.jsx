@@ -9,26 +9,28 @@ const LandingPage = () => {
   <h1 className="text-2xl font-bold text-black">TaskFlow</h1>
 
   <div className="flex gap-4">
-    <Link
-      to="/admin"
-      className="px-4 py-2 border rounded-lg text-sm hover:bg-gray-100"
-    >
-      Admin Login
-    </Link>
+<div className="flex items-center gap-3">
+  <Link
+    to="/admin"
+    className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 transition"
+  >
+    Admin
+  </Link>
 
-    <Link
-      to="/user-login"
-      className="px-4 py-2 border rounded-lg text-sm hover:bg-gray-100"
-    >
-      Login
-    </Link>
+  <Link
+    to="/user-login"
+    className="px-5 py-2 text-sm font-medium bg-black text-white rounded-lg shadow-sm hover:bg-gray-800 transition"
+  >
+    Login
+  </Link>
+</div>
 
-    <Link
+    {/* <Link
       to="/user-singup"
       className="px-4 py-2 bg-black text-white rounded-lg text-sm hover:bg-gray-800"
     >
       Signup
-    </Link>
+    </Link> */}
   </div>
 </header>
 
@@ -44,7 +46,7 @@ const LandingPage = () => {
 
         <div className="flex justify-center gap-4">
           <Link
-            to="/user-singup"
+            to="/user-login"
             className="px-6 py-3 bg-black text-white rounded-lg"
           >
             Get Started
@@ -163,7 +165,7 @@ const LandingPage = () => {
         </p>
 
         <Link
-          to="/user-singup"
+          to="/user-login"
           className="px-6 py-3 bg-black text-white rounded-lg"
         >
           Start Now
