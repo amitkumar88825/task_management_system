@@ -26,14 +26,10 @@ jobs:
 
             cd task_management_system
 
-            # Pull latest code
             git pull origin main
 
             # Stop old containers
-            docker compose down
+            docker compose down || true
 
             # Build and start containers (backend + client)
             docker compose up -d --build
-
-            # Clean unused images (optional but good)
-            docker system prune -f
