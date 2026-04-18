@@ -5,25 +5,32 @@ const LandingPage = () => {
     <div className="bg-gray-100 min-h-screen">
 
       {/* Navbar */}
-      <header className="flex justify-between items-center px-8 py-4 bg-white shadow">
-        <h1 className="text-2xl font-bold text-black">TaskFlow</h1>
+<header className="flex justify-between items-center px-8 py-4 bg-white shadow">
+  <h1 className="text-2xl font-bold text-black">TaskFlow</h1>
 
-        <div className="flex gap-4">
-          <Link
-            to="/user-login"
-            className="px-4 py-2 border rounded-lg text-sm hover:bg-gray-100"
-          >
-            Login
-          </Link>
+  <div className="flex gap-4">
+    <Link
+      to="/admin"
+      className="px-4 py-2 border rounded-lg text-sm hover:bg-gray-100"
+    >
+      Admin Login
+    </Link>
 
-          <Link
-            to="/user-singup"
-            className="px-4 py-2 bg-black text-white rounded-lg text-sm hover:bg-gray-800"
-          >
-            Signup
-          </Link>
-        </div>
-      </header>
+    <Link
+      to="/user-login"
+      className="px-4 py-2 border rounded-lg text-sm hover:bg-gray-100"
+    >
+      Login
+    </Link>
+
+    <Link
+      to="/user-singup"
+      className="px-4 py-2 bg-black text-white rounded-lg text-sm hover:bg-gray-800"
+    >
+      Signup
+    </Link>
+  </div>
+</header>
 
       {/* Hero Section */}
       <section className="text-center py-20 px-6">
@@ -37,7 +44,7 @@ const LandingPage = () => {
 
         <div className="flex justify-center gap-4">
           <Link
-            to="/auth"
+            to="/user-singup"
             className="px-6 py-3 bg-black text-white rounded-lg"
           >
             Get Started
@@ -156,7 +163,7 @@ const LandingPage = () => {
         </p>
 
         <Link
-          to="/auth"
+          to="/user-singup"
           className="px-6 py-3 bg-black text-white rounded-lg"
         >
           Start Now
