@@ -1,0 +1,39 @@
+name: Deploy Full Stack App (Docker Compose)
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # Go to home
+            cd /home/ec2-user
+
+            # Clone repo if not exists
+            if [ ! -d "task_management_system" ]; then
+              git clone https://github.com/amitkumar88825/task_management_system.git
+            fi
+
+            cd task_management_system
+
+            # Pull latest code
+            git pull origin main
+
+            # Stop old containers
+            docker compose down
+
+            # Build and start containers (backend + client)
+            docker compose up -d --build
+
+            # Clean unused images (optional but good)
+            docker system prune -f
