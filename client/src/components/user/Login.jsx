@@ -30,9 +30,10 @@ const UserLogin = () => {
     setLoading(true);
 
     try {
+      const role = 'user';
       await axios.post(
         `${API}/api/auth/login`,
-        { email, password },
+        { email, password, role },
         {
           withCredentials: true
         }

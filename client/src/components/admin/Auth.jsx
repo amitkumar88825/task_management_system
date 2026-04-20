@@ -30,9 +30,10 @@ const AdminAuth = () => {
     setLoading(true);
 
     try {
+      const role = 'admin';
       await axios.post(
         `${API}/api/auth/login`,
-        { email, password },
+        { email, password, role },
         {
           withCredentials: true,
         },

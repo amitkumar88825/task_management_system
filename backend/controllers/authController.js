@@ -61,44 +61,52 @@ export const registerUser = async (req, res) => {
  */
 export const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
 
-    // Validation
-    if (!email || !password) {
-      return res.status(400).json({ message: "Email & password required" });
+    // 1. Validation (Corrected logical operators)
+    if (!email || !password || !role) {
+      return res.status(400).json({ message: "Email, password, and role are required" });
     }
 
-    // Find user (include password)
+    // 2. Find user AND explicitly select password
     const user = await User.findOne({ email }).select("+password");
+    
     if (!user) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    // Compare password
+    // 3. Compare password (user.password will now be defined)
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    // Generate token
+    // 4. Role check
+    if (user.role !== role) {
+      return res.status(400).json({ message: "Unauthorized role" });
+    }
+
+    // 5. Generate token
     const token = jwt.sign(
       { id: user._id, role: user.role, email: user.email, name: user.name },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" },
+      { expiresIn: "7d" }
     );
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false,
+      secure: process.env.NODE_ENV === "production", // Better for production
       sameSite: "lax", 
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Login successful",
+      user: { name: user.name, role: user.role } // Optional: send user info back
     });
+
   } catch (error) {
-    console.error(error);
+    console.error("Login Error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
